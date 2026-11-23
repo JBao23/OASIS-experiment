@@ -1,5 +1,5 @@
 from __future__ import annotations
-from transformers import Qwen3VLForConditionalGeneration, AutoProcessor
+from transformers import (Qwen3VLForConditionalGeneration, AutoProcessor, BitsAndBytesConfig)
 from .config import OasisConfig
 from .event.forest import EventForest, time_to_hhmmss
 from .types import EventNode, QANode
@@ -106,11 +106,18 @@ class OasisModel:
 
         self.max_frames_per_node = cfg.event_node.max_frames_per_node
         self.tokens_per_frame = cfg.event_node.tokens_per_frame
+        quant_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,
+        )
         self.mllm = Qwen3VLForConditionalGeneration.from_pretrained(
             cfg.mllm.model_path,
             device_map="auto",
-            torch_dtype=torch.bfloat16,
-            attn_implementation="flash_attention_2",
+            torch_dtype=torch.float16,
+            quantization_config=quant_config,
+            attn_implementation="sdpa",
         )
         self.mllm_gen_kwargs = dict(
             max_new_tokens=self.cfg.mllm.max_new_tokens,

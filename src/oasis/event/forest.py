@@ -84,10 +84,10 @@ class EventForest:
         self.embedding_model = SentenceTransformer(
             embedding_model_path,
             model_kwargs={
-                "attn_implementation": "flash_attention_2",
+                "attn_implementation": "sdpa",
                 "device_map": "auto",
-                "torch_dtype": torch.bfloat16,
-            },
+                "torch_dtype": torch.float16,
+            },,
             tokenizer_kwargs={"padding_side": "left"},
         )
         self.embedding_model.eval()
